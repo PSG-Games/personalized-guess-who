@@ -4,13 +4,12 @@ import UploadPage from './UploadPage';
 
 describe('UploadPage', () => {
   beforeEach(() => {
-    // Clear any stored images before each test
-    sessionStorage.clear();
+    // Component uses React state, no sessionStorage to clear
   });
 
   it('renders the upload component with a file input', () => {
     render(<UploadPage />);
-    const fileInput = screen.getByLabelText(/upload/i);
+    const fileInput = screen.getByLabelText(/choose image/i);
     expect(fileInput).toBeInTheDocument();
     expect(fileInput).toHaveAttribute('type', 'file');
     expect(fileInput).toHaveAttribute('accept', 'image/*');
@@ -18,13 +17,13 @@ describe('UploadPage', () => {
 
   it('accepts image files', () => {
     render(<UploadPage />);
-    const fileInput = screen.getByLabelText(/upload/i) as HTMLInputElement;
+    const fileInput = screen.getByLabelText(/choose image/i) as HTMLInputElement;
     expect(fileInput.accept).toBe('image/*');
   });
 
   it('displays the uploaded image after selecting a file', async () => {
     render(<UploadPage />);
-    const fileInput = screen.getByLabelText(/upload/i) as HTMLInputElement;
+    const fileInput = screen.getByLabelText(/choose image/i) as HTMLInputElement;
 
     // Create a mock file
     const file = new File(['mock image data'], 'test.png', { type: 'image/png' });
@@ -33,7 +32,7 @@ describe('UploadPage', () => {
     fireEvent.change(fileInput, { target: { files: [file] } });
 
     // Check that the image is displayed
-    const displayedImage = await screen.findByRole('img', { name: /uploaded/i });
+    const displayedImage = await screen.findByAltText(/uploaded image/i);
     expect(displayedImage).toBeInTheDocument();
   });
 
@@ -42,7 +41,7 @@ describe('UploadPage', () => {
     const fetchSpy = vi.spyOn(globalThis as unknown as { fetch: typeof fetch }, 'fetch');
 
     render(<UploadPage />);
-    const fileInput = screen.getByLabelText(/upload/i) as HTMLInputElement;
+    const fileInput = screen.getByLabelText(/choose image/i) as HTMLInputElement;
 
     // Create a mock file
     const file = new File(['mock image data'], 'test.png', { type: 'image/png' });
@@ -58,7 +57,7 @@ describe('UploadPage', () => {
 
   it('stores the image in client-side state (not on a server)', async () => {
     render(<UploadPage />);
-    const fileInput = screen.getByLabelText(/upload/i) as HTMLInputElement;
+    const fileInput = screen.getByLabelText(/choose image/i) as HTMLInputElement;
 
     // Create a mock file
     const file = new File(['mock image data'], 'test.png', { type: 'image/png' });
@@ -67,20 +66,20 @@ describe('UploadPage', () => {
     fireEvent.change(fileInput, { target: { files: [file] } });
 
     // After upload, the component should still have the image in state
-    const displayedImage = await screen.findByRole('img', { name: /uploaded/i });
+    const displayedImage = await screen.findByAltText(/uploaded image/i);
     expect(displayedImage).toBeInTheDocument();
   });
 
   it('allows clearing/re-uploading the image', async () => {
     render(<UploadPage />);
-    const fileInput = screen.getByLabelText(/upload/i) as HTMLInputElement;
+    const fileInput = screen.getByLabelText(/choose image/i) as HTMLInputElement;
 
     // Upload first image
     const file1 = new File(['mock image data 1'], 'test1.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file1] } });
 
     // Verify image is displayed
-    const displayedImage = await screen.findByRole('img', { name: /uploaded/i });
+    const displayedImage = await screen.findByAltText(/uploaded image/i);
     expect(displayedImage).toBeInTheDocument();
 
     // Find and click the clear button
@@ -93,20 +92,20 @@ describe('UploadPage', () => {
 
   it('has accessible label associated with the file input', () => {
     render(<UploadPage />);
-    const label = screen.getByLabelText(/upload/i);
-    expect(label).toBeInTheDocument();
-    expect(label.tagName).toBe('INPUT');
+    const fileInput = screen.getByLabelText(/choose image/i);
+    expect(fileInput).toBeInTheDocument();
+    expect(fileInput.tagName).toBe('INPUT');
   });
 
   it('displays uploaded image filename', async () => {
     render(<UploadPage />);
-    const fileInput = screen.getByLabelText(/upload/i) as HTMLInputElement;
+    const fileInput = screen.getByLabelText(/choose image/i) as HTMLInputElement;
 
     const file = new File(['mock image data'], 'my-scan.png', { type: 'image/png' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
-    // Check that the filename is displayed
-    const filenameDisplay = await screen.findByText(/my-scan\.png/i);
+    // Check that the filename is displayed (it's in a <strong> tag)
+    const filenameDisplay = await screen.findByText(/my-scan/, { exact: false });
     expect(filenameDisplay).toBeInTheDocument();
   });
 });
