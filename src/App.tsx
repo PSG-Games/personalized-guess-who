@@ -1,10 +1,12 @@
+import UploadPage from './components/upload/UploadPage';
+
 function App() {
   return (
     <main>
       <h1>Personalized Guess Who</h1>
-      <p>Welcome to the game!</p>
+      <UploadPage />
     </main>
-  )
+  );
 }
 
-export default App
+export default App;
