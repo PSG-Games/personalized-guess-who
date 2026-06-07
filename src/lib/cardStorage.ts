@@ -129,7 +129,12 @@ class IndexedDBCardStorage implements CardStorageRepository {
   private initializeDatabase(): Promise<void> {
     return new Promise((resolve, reject) => {
       // Check if IndexedDB is available
-      const idb = typeof indexedDB !== 'undefined' ? indexedDB : (global as any).indexedDB;
+      const idb =
+        typeof indexedDB !== 'undefined'
+          ? indexedDB
+          : typeof globalThis !== 'undefined'
+            ? (globalThis as any).indexedDB
+            : undefined;
 
       if (!idb) {
         reject(new Error('IndexedDB is not available in this environment'));
@@ -147,7 +152,7 @@ class IndexedDBCardStorage implements CardStorageRepository {
         resolve();
       };
 
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
         const db = (event.target as IDBOpenDBRequest).result;
 
         // Create the object store if it doesn't exist
@@ -275,7 +280,12 @@ class IndexedDBCardStorage implements CardStorageRepository {
  */
 function createCardStorage(): CardStorageRepository {
   // Check if IndexedDB is available
-  const idb = typeof indexedDB !== 'undefined' ? indexedDB : (global as any).indexedDB;
+  const idb =
+    typeof indexedDB !== 'undefined'
+      ? indexedDB
+      : typeof globalThis !== 'undefined'
+        ? (globalThis as any).indexedDB
+        : undefined;
 
   if (!idb) {
     // Use in-memory storage in test environments where IndexedDB is not available
