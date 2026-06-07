@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { performOCR, type TextBlock } from '../../lib/ocr';
 import { detectFaces, type Face } from '../../lib/faceDetection';
 import { assembleDraftCards, type DraftCard } from '../../lib/cardAssembly';
+import ExtractionReview from './ExtractionReview';
 import './ocr-results.css';
 
 export interface OCRResultsProps {
   imageDataUrl: string;
   filename: string;
+  onReviewComplete?: (cards: DraftCard[]) => void;
 }
 
-export default function OCRResults({ imageDataUrl, filename }: OCRResultsProps) {
+export default function OCRResults({ imageDataUrl, filename, onReviewComplete }: OCRResultsProps) {
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
   const [faces, setFaces] = useState<Face[]>([]);
   const [draftCards, setDraftCards] = useState<DraftCard[]>([]);
@@ -107,36 +109,10 @@ export default function OCRResults({ imageDataUrl, filename }: OCRResultsProps) 
           </div>
 
           {draftCards.length > 0 && (
-            <div className="draft-cards-preview">
-              <h4>Draft Cards ({draftCards.length})</h4>
-              <p className="draft-cards-note">
-                These cards are ready for review and correction. You can edit names and add traits in the next step.
-              </p>
-              <div className="draft-cards-list">
-                {draftCards.map((card, idx) => (
-                  <div key={idx} className="draft-card">
-                    <div className="draft-card-header">
-                      <span className="draft-card-id">Card {idx + 1}</span>
-                      {card.matchedName && (
-                        <span className="draft-card-confidence">
-                          {Math.round(card.confidence * 100)}% confident
-                        </span>
-                      )}
-                    </div>
-                    <p className="draft-card-name">
-                      <strong>Name:</strong> {card.matchedName || '(unpaired)'}
-                    </p>
-                    <p className="draft-card-reason">
-                      <small>
-                        {card.pairingReason === 'proximity'
-                          ? 'Paired by proximity'
-                          : 'Face without nearby text'}
-                      </small>
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ExtractionReview
+              draftCards={draftCards}
+              onCardsApproved={onReviewComplete || (() => {})}
+            />
           )}
 
           <details className="detailed-results">
