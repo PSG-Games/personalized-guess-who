@@ -32,7 +32,7 @@ export default function OCRResults({ imageDataUrl, filename }: OCRResultsProps) 
         setFaces(faceResults);
 
         // Assemble draft cards from the results
-        const cards = assembleDraftCards(faceResults, ocrResults);
+        const cards = assembleDraftCards(ocrResults, faceResults);
         setDraftCards(cards);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to process image';

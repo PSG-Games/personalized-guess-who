@@ -2,6 +2,18 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import UploadPage from './UploadPage';
 
+// Mock the OCR module to avoid heavy Tesseract.js initialization in tests
+vi.mock('../../lib/ocr', () => ({
+  performOCR: vi.fn().mockResolvedValue([
+    {
+      text: 'Mock Name',
+      confidence: 95,
+      boundingBox: { x: 10, y: 20, width: 100, height: 30 },
+    },
+  ]),
+  cleanupWorker: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe('UploadPage', () => {
   beforeEach(() => {
     // Component uses React state, no sessionStorage to clear

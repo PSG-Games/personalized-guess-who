@@ -157,11 +157,11 @@ function calculatePairingConfidence(face: Face, text: TextBlock, distance: numbe
  * closest face, preventing cases where face A grabs a text that's actually closer
  * to face B.
  *
+ * @param textBlocks - Text blocks from OCR task
  * @param faces - Detected faces from face detection task
- * @param texts - Text blocks from OCR task
  * @returns Draft cards ready for user review and correction
  */
-export function assembleDraftCards(faces: Face[], texts: TextBlock[]): DraftCard[] {
+export function assembleDraftCards(textBlocks: TextBlock[], faces: Face[]): DraftCard[] {
   // Phase 1: Build a mapping of text -> closest face
   interface TextFaceMatch {
     textIndex: number;
@@ -172,8 +172,8 @@ export function assembleDraftCards(faces: Face[], texts: TextBlock[]): DraftCard
 
   const matches: TextFaceMatch[] = [];
 
-  for (let textIdx = 0; textIdx < texts.length; textIdx++) {
-    const text = texts[textIdx];
+  for (let textIdx = 0; textIdx < textBlocks.length; textIdx++) {
+    const text = textBlocks[textIdx];
     const textCenter = getBoundingBoxCenter(text.boundingBox);
 
     let bestFaceIdx = -1;
@@ -232,7 +232,7 @@ export function assembleDraftCards(faces: Face[], texts: TextBlock[]): DraftCard
 
     for (const [textIdx, match] of textToFace) {
       if (match.faceIndex === faceIdx) {
-        matchedName = texts[textIdx].text;
+        matchedName = textBlocks[textIdx].text;
         matchedTextIndex = textIdx;
         confidence = match.confidence;
         break;

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createStoredImage, isValidImageFile, type StoredImage } from '../../lib/imageStorage';
+import OCRResults from './OCRResults';
 import './upload.css';
 
 export default function UploadPage() {
@@ -84,6 +85,8 @@ export default function UploadPage() {
               />
               <figcaption>Image preview - stored locally in your browser</figcaption>
             </figure>
+
+            <OCRResults imageDataUrl={uploadedImage.dataUrl} filename={uploadedImage.filename} />
 
             <button onClick={handleClear} className="clear-button">
               Clear and Upload New
