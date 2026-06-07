@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { createStoredImage, isValidImageFile, type StoredImage } from '../../lib/imageStorage';
+import type { DraftCard } from '../../types/card';
 import OCRResults from './OCRResults';
 import './upload.css';
 
 export default function UploadPage() {
   const [uploadedImage, setUploadedImage] = useState<StoredImage | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [approvedCards, setApprovedCards] = useState<DraftCard[] | null>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -33,6 +35,12 @@ export default function UploadPage() {
   const handleClear = () => {
     setUploadedImage(null);
     setError(null);
+    setApprovedCards(null);
+  };
+
+  const handleCardsApproved = (cards: DraftCard[]) => {
+    setApprovedCards(cards);
+    // TODO: In Task 7, pass these cards to the trait entry component
   };
 
   return (
@@ -86,7 +94,21 @@ export default function UploadPage() {
               <figcaption>Image preview - stored locally in your browser</figcaption>
             </figure>
 
-            <OCRResults imageDataUrl={uploadedImage.dataUrl} filename={uploadedImage.filename} />
+            {approvedCards ? (
+              <div className="upload-cards-approved">
+                <div className="upload-cards-approved-message">
+                  <h4>Cards Approved</h4>
+                  <p>{approvedCards.length} card(s) ready for trait entry.</p>
+                  {/* TODO: In Task 7, show trait entry component here */}
+                </div>
+              </div>
+            ) : (
+              <OCRResults
+                imageDataUrl={uploadedImage.dataUrl}
+                filename={uploadedImage.filename}
+                onReviewComplete={handleCardsApproved}
+              />
+            )}
 
             <button onClick={handleClear} className="clear-button">
               Clear and Upload New
