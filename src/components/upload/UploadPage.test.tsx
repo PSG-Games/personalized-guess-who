@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import UploadPage from './UploadPage';
+import { cardStorage } from '../../lib/cardStorage';
 
 // Mock the OCR module to avoid heavy Tesseract.js initialization in tests
 vi.mock('../../lib/ocr', () => ({
@@ -17,6 +18,11 @@ vi.mock('../../lib/ocr', () => ({
 describe('UploadPage', () => {
   beforeEach(() => {
     // Component uses React state, no sessionStorage to clear
+  });
+
+  afterEach(async () => {
+    // Clean up card storage after each test
+    await cardStorage.clear();
   });
 
   it('renders the upload component with a file input', () => {
@@ -119,5 +125,14 @@ describe('UploadPage', () => {
     // Check that the filename is displayed (it's in a <strong> tag)
     const filenameDisplay = await screen.findByText(/my-scan/, { exact: false });
     expect(filenameDisplay).toBeInTheDocument();
+  });
+
+  it('shows SavedCardsGallery component', () => {
+    render(<UploadPage />);
+
+    // The SavedCardsGallery should be visible in the component
+    // It should show either empty state or saved cards
+    const gallerySection = screen.getByLabelText(/Saved cards gallery/i);
+    expect(gallerySection).toBeInTheDocument();
   });
 });

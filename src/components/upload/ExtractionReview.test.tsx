@@ -108,14 +108,15 @@ describe('ExtractionReview', () => {
 
       render(<ExtractionReview draftCards={cards} onCardsApproved={() => {}} />);
 
-      const inputs = screen.getAllByRole('textbox');
-      expect(inputs).toHaveLength(2);
+      // Get name inputs specifically by using getByDisplayValue
+      const aliceInput = screen.getByDisplayValue('Alice');
+      const bobInput = screen.getByDisplayValue('Bob');
 
-      await user.clear(inputs[0]);
-      await user.type(inputs[0], 'Alice Updated');
+      await user.clear(aliceInput);
+      await user.type(aliceInput, 'Alice Updated');
 
-      expect(inputs[0]).toHaveValue('Alice Updated');
-      expect(inputs[1]).toHaveValue('Bob'); // Unchanged
+      expect(aliceInput).toHaveValue('Alice Updated');
+      expect(bobInput).toHaveValue('Bob'); // Unchanged
     });
   });
 
@@ -280,17 +281,18 @@ describe('ExtractionReview', () => {
 
       render(<ExtractionReview draftCards={cards} onCardsApproved={() => {}} />);
 
-      const inputs = screen.getAllByRole('textbox');
-      expect(inputs).toHaveLength(2);
+      // Get name inputs specifically
+      const aliceInput = screen.getByDisplayValue('Alice');
+      const bobInput = screen.getByDisplayValue('Bob');
 
       // Tab between inputs - focus will move through all focusable elements
-      inputs[0].focus();
-      expect(document.activeElement).toBe(inputs[0]);
+      aliceInput.focus();
+      expect(document.activeElement).toBe(aliceInput);
 
       // Note: Tab will cycle through all focusable elements including buttons,
       // so we just verify that we can focus the inputs
-      await user.keyboard('{Tab}{Tab}{Tab}'); // Tab past buttons to next input
-      // We focus back on the first input to verify focus cycling works
+      await user.keyboard('{Tab}{Tab}{Tab}{Tab}{Tab}'); // Tab past buttons to next input
+      // We focus back on the name input to verify focus cycling works
     });
   });
 
@@ -307,9 +309,9 @@ describe('ExtractionReview', () => {
       render(<ExtractionReview draftCards={cards} onCardsApproved={onApproved} />);
 
       // Edit first card
-      const inputs = screen.getAllByRole('textbox');
-      await user.clear(inputs[0]);
-      await user.type(inputs[0], 'Alice Updated');
+      const aliceInput = screen.getByDisplayValue('Alice');
+      await user.clear(aliceInput);
+      await user.type(aliceInput, 'Alice Updated');
 
       // Discard second card (find it by its current input value)
       const discardButtons = screen.getAllByRole('button', { name: /discard/i });
@@ -331,6 +333,30 @@ describe('ExtractionReview', () => {
       expect(approvedCards).toHaveLength(2);
       expect(approvedCards[0].matchedName).toBe('Alice Updated');
       expect(approvedCards[1].matchedName).toBe('Charlie');
+    });
+
+    it('includes traits in approved cards', async () => {
+      const user = userEvent.setup();
+      const onApproved = vi.fn();
+      const cards = [
+        createMockDraftCard({ faceId: 'face-1', matchedName: 'Alice' }),
+      ];
+
+      render(<ExtractionReview draftCards={cards} onCardsApproved={onApproved} />);
+
+      // Add a trait
+      const traitInput = screen.getByPlaceholderText(/e\.g\., 'always late'/i);
+      await user.type(traitInput, 'funny');
+      await user.keyboard('{Enter}');
+
+      // Approve
+      const approveButton = screen.getByRole('button', { name: /approve all|confirm|save all/i });
+      await user.click(approveButton);
+
+      expect(onApproved).toHaveBeenCalledOnce();
+      const approvedCards = onApproved.mock.calls[0][0];
+
+      expect(approvedCards[0].traits).toEqual(['funny']);
     });
   });
 });

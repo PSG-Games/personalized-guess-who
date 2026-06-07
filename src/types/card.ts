@@ -43,6 +43,7 @@ export interface DraftCard {
   matchedTextIndex: number | null; // index of the text block that was paired
   confidence: number; // 0-1 scale: how confident is this pairing?
   pairingReason: 'proximity' | 'orphan'; // 'proximity' if paired via distance, 'orphan' if no nearby text
+  traits?: string[]; // custom inside-joke traits added by the user during review
 }
 
 /**
@@ -54,6 +55,6 @@ export interface Character {
   faceId: string;
   face: Face;
   name: string;
-  trait: string; // custom inside-joke trait
+  traits?: string[]; // custom inside-joke traits
   imageUrl: string; // reference to the original image
 }
