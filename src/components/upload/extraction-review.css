@@ -522,6 +522,12 @@
   background-color: var(--color-accent-dark, #357abd);
 }
 
+/* Trait editor section within card review */
+.card-review-item-traits-section {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 0.75rem;
+}
+
 /* Accessibility: reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .card-review-item,
