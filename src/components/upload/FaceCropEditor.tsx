@@ -70,7 +70,7 @@ export default function FaceCropEditor({
   };
 
   return (
-    <dialog ref={dialogRef} className="face-crop-editor-dialog">
+    <dialog ref={dialogRef} className="face-crop-editor-dialog" aria-label="Face crop editor">
       <div className="face-crop-editor">
         <div className="face-crop-editor-header">
           <h3>Adjust Face Crop</h3>
@@ -171,12 +171,14 @@ export default function FaceCropEditor({
           <button
             className="face-crop-editor-button face-crop-editor-cancel"
             onClick={handleCancel}
+            aria-label="Cancel crop editing"
           >
             Cancel
           </button>
           <button
             className="face-crop-editor-button face-crop-editor-save"
             onClick={handleSave}
+            aria-label="Apply crop changes"
           >
             Apply Crop
           </button>

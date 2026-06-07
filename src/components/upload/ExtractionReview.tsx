@@ -9,10 +9,6 @@ export interface ExtractionReviewProps {
   onCardsApproved: (cards: DraftCard[]) => void;
 }
 
-export interface ReviewCard extends DraftCard {
-  isDiscarded?: boolean;
-}
-
 /**
  * ExtractionReview - Compound component for reviewing and correcting draft cards
  *
@@ -137,6 +133,7 @@ export default function ExtractionReview({
             <button
               className="extraction-review-undo"
               onClick={() => setDiscardedFaceIds(new Set())}
+              aria-label="Undo all discards"
             >
               Undo All Discards
             </button>
