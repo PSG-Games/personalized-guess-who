@@ -50,7 +50,7 @@ describe('cardAssembly', () => {
         },
       ];
 
-      const result = assembleDraftCards(faces, texts);
+      const result = assembleDraftCards(texts, faces);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
@@ -79,7 +79,7 @@ describe('cardAssembly', () => {
         },
       ];
 
-      const result = assembleDraftCards(faces, texts);
+      const result = assembleDraftCards(texts, faces);
 
       expect(result).toHaveLength(1);
       expect(result[0].matchedName).toBeNull();
@@ -121,7 +121,7 @@ describe('cardAssembly', () => {
         { text: 'Iris', confidence: 93, boundingBox: { x: 255, y: 405, width: 50, height: 18 } },
       ];
 
-      const result = assembleDraftCards(faces, texts);
+      const result = assembleDraftCards(texts, faces);
 
       expect(result).toHaveLength(9);
 
@@ -151,7 +151,7 @@ describe('cardAssembly', () => {
         { text: 'Name4', confidence: 94, boundingBox: { x: 155, y: 275, width: 50, height: 18 } },
       ];
 
-      const result = assembleDraftCards(faces, texts);
+      const result = assembleDraftCards(texts, faces);
 
       expect(result).toHaveLength(4);
       expect(result[0].matchedName).toBe('Name1');
@@ -184,7 +184,7 @@ describe('cardAssembly', () => {
         },
       ];
 
-      const result = assembleDraftCards(faces, texts);
+      const result = assembleDraftCards(texts, faces);
 
       expect(result).toHaveLength(2);
       expect(result[0].matchedName).toBe('Alice');
@@ -215,7 +215,7 @@ describe('cardAssembly', () => {
         },
       ];
 
-      const result = assembleDraftCards(faces, texts);
+      const result = assembleDraftCards(texts, faces);
 
       expect(result).toHaveLength(1);
       expect(result[0].matchedName).toBe('Alice');
@@ -225,8 +225,8 @@ describe('cardAssembly', () => {
 
     it('handles empty inputs gracefully', () => {
       expect(assembleDraftCards([], [])).toEqual([]);
-      expect(assembleDraftCards([{ id: 'f1', confidence: 0.9, boundingBox: { x: 0, y: 0, width: 10, height: 10 } }], [])).toHaveLength(1);
-      expect(assembleDraftCards([], [{ text: 'orphan', confidence: 90, boundingBox: { x: 0, y: 0, width: 10, height: 10 } }])).toEqual([]);
+      expect(assembleDraftCards([], [{ id: 'f1', confidence: 0.9, boundingBox: { x: 0, y: 0, width: 10, height: 10 } }])).toHaveLength(1);
+      expect(assembleDraftCards([{ text: 'orphan', confidence: 90, boundingBox: { x: 0, y: 0, width: 10, height: 10 } }], [])).toEqual([]);
     });
   });
 
@@ -244,7 +244,7 @@ describe('cardAssembly', () => {
         { text: 'Charlie Brown', confidence: 92, boundingBox: { x: 120, y: 310, width: 80, height: 25 } },
       ];
 
-      const result = assembleDraftCards(faces, texts);
+      const result = assembleDraftCards(texts, faces);
 
       expect(result).toHaveLength(3);
       expect(result[0].matchedName).toBe('Alice Smith');
@@ -277,8 +277,8 @@ describe('cardAssembly', () => {
         boundingBox: { x: 205, y: 285, width: 50, height: 15 },
       };
 
-      const closeResult = assembleDraftCards(faces, [closeText]);
-      const distantResult = assembleDraftCards(faces, [distantText]);
+      const closeResult = assembleDraftCards([closeText], faces);
+      const distantResult = assembleDraftCards([distantText], faces);
 
       expect(closeResult[0].confidence).toBeGreaterThan(distantResult[0].confidence);
     });
@@ -308,8 +308,8 @@ describe('cardAssembly', () => {
         boundingBox: { x: 305, y: 185, width: 50, height: 15 },
       };
 
-      const highResult = assembleDraftCards([highConfidenceFace], [highConfidenceText]);
-      const lowResult = assembleDraftCards([lowConfidenceFace], [lowConfidenceText]);
+      const highResult = assembleDraftCards([highConfidenceText], [highConfidenceFace]);
+      const lowResult = assembleDraftCards([lowConfidenceText], [lowConfidenceFace]);
 
       expect(highResult[0].confidence).toBeGreaterThan(lowResult[0].confidence);
     });
@@ -328,7 +328,7 @@ describe('cardAssembly', () => {
         { text: 'Bob', confidence: 95, boundingBox: { x: 150, y: 190, width: 50, height: 20 } },
       ];
 
-      const result = assembleDraftCards(faces, texts);
+      const result = assembleDraftCards(texts, faces);
 
       expect(result).toHaveLength(2);
       // Should pair to closest text, not both to same text
@@ -348,7 +348,7 @@ describe('cardAssembly', () => {
         { text: 'Middle', confidence: 95, boundingBox: { x: 155, y: 145, width: 50, height: 20 } },
       ];
 
-      const result = assembleDraftCards(faces, texts);
+      const result = assembleDraftCards(texts, faces);
 
       // Should have all 3 faces (orphaned ones)
       expect(result).toHaveLength(3);
@@ -370,7 +370,7 @@ describe('cardAssembly', () => {
         { text: 'EdgeRight', confidence: 95, boundingBox: { x: 450, y: 100, width: 40, height: 20 } },
       ];
 
-      const result = assembleDraftCards(faces, texts);
+      const result = assembleDraftCards(texts, faces);
 
       expect(result).toHaveLength(2);
       expect(result[0].matchedName).toBe('EdgeLeft');
@@ -386,7 +386,7 @@ describe('cardAssembly', () => {
         { text: 'Solo', confidence: 95, boundingBox: { x: 105, y: 190, width: 50, height: 20 } },
       ];
 
-      const result = assembleDraftCards(faces, texts);
+      const result = assembleDraftCards(texts, faces);
 
       expect(result).toHaveLength(1);
       expect(result[0].matchedName).toBe('Solo');
