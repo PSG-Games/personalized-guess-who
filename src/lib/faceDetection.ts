@@ -95,14 +95,16 @@ export async function detectFaces(imageDataUrl: string): Promise<Face[]> {
 
     const faces: Face[] = detections.detections.map((detection, index) => {
       const bbox = detection.boundingBox;
+      // MediaPipe ensures boundingBox is always present
+      const bboxOrDefault = bbox || { originX: 0, originY: 0, width: 0, height: 0 };
       return {
         id: `face-${index}`,
         confidence: detection.categories[0]?.score || 0,
         boundingBox: {
-          x: bbox.originX,
-          y: bbox.originY,
-          width: bbox.width,
-          height: bbox.height,
+          x: bboxOrDefault.originX,
+          y: bboxOrDefault.originY,
+          width: bboxOrDefault.width,
+          height: bboxOrDefault.height,
         },
       };
     });
