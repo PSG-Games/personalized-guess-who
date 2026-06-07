@@ -37,8 +37,7 @@ async function initializeWorker(): Promise<void> {
 
   initPromise = (async () => {
     try {
-      worker = createWorker();
-      await worker.load();
+      worker = await createWorker();
       await worker.loadLanguage('eng');
       await worker.initialize('eng');
     } catch (error) {
