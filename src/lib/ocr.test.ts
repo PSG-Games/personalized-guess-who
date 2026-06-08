@@ -4,8 +4,9 @@ import { performOCR, cleanupWorker } from './ocr';
 // Mock Tesseract.js
 vi.mock('tesseract.js', () => {
   return {
-    createScheduler: vi.fn(),
-    createWorker: vi.fn(),
+    default: {
+      createWorker: vi.fn(),
+    },
   };
 });
 
@@ -39,16 +40,16 @@ describe('OCR Module', () => {
         terminate: vi.fn().mockResolvedValue(undefined),
       };
 
-      const { createWorker } = await import('tesseract.js');
+      const Tesseract = await import('tesseract.js');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(createWorker).mockResolvedValue(mockWorker as any);
+      vi.mocked(Tesseract.default.createWorker).mockResolvedValue(mockWorker as any);
 
       const imageDataUrl =
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
       await performOCR(imageDataUrl);
 
-      expect(createWorker).toHaveBeenCalled();
+      expect(Tesseract.default.createWorker).toHaveBeenCalled();
       expect(mockWorker.loadLanguage).toHaveBeenCalledWith('eng');
       expect(mockWorker.initialize).toHaveBeenCalledWith('eng');
     });
@@ -78,9 +79,9 @@ describe('OCR Module', () => {
         terminate: vi.fn().mockResolvedValue(undefined),
       };
 
-      const { createWorker } = await import('tesseract.js');
+      const Tesseract = await import('tesseract.js');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(createWorker).mockResolvedValue(mockWorker as any);
+      vi.mocked(Tesseract.default.createWorker).mockResolvedValue(mockWorker as any);
 
       const imageDataUrl =
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
@@ -130,20 +131,20 @@ describe('OCR Module', () => {
         terminate: vi.fn().mockResolvedValue(undefined),
       };
 
-      const { createWorker } = await import('tesseract.js');
+      const Tesseract = await import('tesseract.js');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(createWorker).mockResolvedValue(mockWorker as any);
+      vi.mocked(Tesseract.default.createWorker).mockResolvedValue(mockWorker as any);
 
       const imageDataUrl =
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
       // First call
       await performOCR(imageDataUrl);
-      expect(createWorker).toHaveBeenCalledTimes(1);
+      expect(Tesseract.default.createWorker).toHaveBeenCalledTimes(1);
 
       // Second call should reuse the worker
       await performOCR(imageDataUrl);
-      expect(createWorker).toHaveBeenCalledTimes(1);
+      expect(Tesseract.default.createWorker).toHaveBeenCalledTimes(1);
       expect(mockWorker.recognize).toHaveBeenCalledTimes(2);
     });
 
@@ -154,9 +155,9 @@ describe('OCR Module', () => {
         terminate: vi.fn().mockResolvedValue(undefined),
       };
 
-      const { createWorker } = await import('tesseract.js');
+      const Tesseract = await import('tesseract.js');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(createWorker).mockResolvedValue(mockWorker as any);
+      vi.mocked(Tesseract.default.createWorker).mockResolvedValue(mockWorker as any);
 
       const imageDataUrl =
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
@@ -174,9 +175,9 @@ describe('OCR Module', () => {
         terminate: vi.fn().mockResolvedValue(undefined),
       };
 
-      const { createWorker } = await import('tesseract.js');
+      const Tesseract = await import('tesseract.js');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(createWorker).mockResolvedValue(mockWorker as any);
+      vi.mocked(Tesseract.default.createWorker).mockResolvedValue(mockWorker as any);
 
       const imageDataUrl =
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
@@ -196,9 +197,9 @@ describe('OCR Module', () => {
         terminate: vi.fn().mockResolvedValue(undefined),
       };
 
-      const { createWorker } = await import('tesseract.js');
+      const Tesseract = await import('tesseract.js');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(createWorker).mockResolvedValue(mockWorker as any);
+      vi.mocked(Tesseract.default.createWorker).mockResolvedValue(mockWorker as any);
 
       const imageDataUrl = 'invalid-data-url';
 
@@ -221,9 +222,9 @@ describe('OCR Module', () => {
         terminate: vi.fn().mockResolvedValue(undefined),
       };
 
-      const { createWorker } = await import('tesseract.js');
+      const Tesseract = await import('tesseract.js');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(createWorker).mockResolvedValue(mockWorker as any);
+      vi.mocked(Tesseract.default.createWorker).mockResolvedValue(mockWorker as any);
 
       const imageDataUrl =
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';

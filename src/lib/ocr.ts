@@ -1,9 +1,9 @@
 /**
- * In-browser OCR module using Tesseract.js
+ * In-browser OCR module using Tesseract.js v7
  * Extracts text and bounding boxes from images entirely in the browser.
  */
 
-import { createWorker } from 'tesseract.js';
+import Tesseract from 'tesseract.js';
 
 export interface TextBlock {
   text: string;
@@ -37,7 +37,7 @@ async function initializeWorker(): Promise<void> {
 
   initPromise = (async () => {
     try {
-      worker = await createWorker();
+      worker = await Tesseract.createWorker();
       await worker.loadLanguage('eng');
       await worker.initialize('eng');
     } catch (error) {
