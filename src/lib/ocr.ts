@@ -7,7 +7,7 @@ import Tesseract from 'tesseract.js';
 
 export interface TextBlock {
   text: string;
-  confidence: number; // 0-100 scale
+  confidence: number; // 0-100 scale (matches Tesseract's native confidence range)
   boundingBox: {
     x: number;
     y: number;
@@ -16,13 +16,16 @@ export interface TextBlock {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let worker: any = null;
+let worker: Tesseract.Worker | null = null;
 let isInitializing = false;
 let initPromise: Promise<void> | null = null;
 
 /**
- * Initialize the Tesseract worker (lazy-loaded on first use)
+ * Initialize the Tesseract worker (lazy-loaded on first use).
+ *
+ * Tesseract.js v7 loads and initializes the language model in a single step —
+ * pass the language code(s) directly to createWorker() and the worker is ready
+ * to recognize immediately. There is no separate loadLanguage()/initialize().
  */
 async function initializeWorker(): Promise<void> {
   if (worker) {
@@ -37,9 +40,7 @@ async function initializeWorker(): Promise<void> {
 
   initPromise = (async () => {
     try {
-      worker = await Tesseract.createWorker();
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
+      worker = await Tesseract.createWorker('eng');
     } catch (error) {
       // Clean up if initialization fails
       if (worker) {
@@ -66,18 +67,34 @@ async function initializeWorker(): Promise<void> {
  * Tesseract returns bbox as { x0, y0, x1, y1 }
  * We convert to { x, y, width, height }
  */
-function normalizeBoundingBox(bbox: {
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
-}) {
+function normalizeBoundingBox(bbox: { x0: number; y0: number; x1: number; y1: number }) {
   return {
     x: bbox.x0,
     y: bbox.y0,
     width: bbox.x1 - bbox.x0,
     height: bbox.y1 - bbox.y0,
   };
+}
+
+/**
+ * Flatten Tesseract's nested page structure (blocks -> paragraphs -> lines)
+ * into a single list of line-level text blocks. Line granularity gives us
+ * usable bounding boxes for name-to-face pairing without being as noisy as
+ * word-level output or as coarse as block-level output.
+ */
+function extractLines(page: Tesseract.Page): Tesseract.Line[] {
+  const blocks = page.blocks ?? [];
+  const lines: Tesseract.Line[] = [];
+
+  for (const block of blocks) {
+    for (const paragraph of block.paragraphs) {
+      for (const line of paragraph.lines) {
+        lines.push(line);
+      }
+    }
+  }
+
+  return lines;
 }
 
 /**
@@ -101,20 +118,13 @@ export async function performOCR(imageSource: string): Promise<TextBlock[]> {
 
     // Run OCR recognition
     const result = await worker.recognize(imageSource);
+    const lines = extractLines(result.data);
 
-    // Extract text blocks from result
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const textBlocks: TextBlock[] = ((result as any).data?.lines || []).map((line: any) => ({
+    const textBlocks: TextBlock[] = lines.map((line) => ({
       text: line.text || '',
-      confidence: Math.round((line.confidence || 0) * 100), // Convert to 0-100 scale
-      boundingBox: normalizeBoundingBox(
-        line.bbox || {
-          x0: 0,
-          y0: 0,
-          x1: 0,
-          y1: 0,
-        }
-      ),
+      // Tesseract reports confidence on a 0-100 scale already — no rescaling needed.
+      confidence: Math.round(line.confidence || 0),
+      boundingBox: normalizeBoundingBox(line.bbox || { x0: 0, y0: 0, x1: 0, y1: 0 }),
     }));
 
     return textBlocks;
