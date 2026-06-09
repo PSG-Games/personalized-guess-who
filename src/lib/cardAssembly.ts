@@ -31,7 +31,10 @@ export type { Face, TextBlock, DraftCard };
  * - 200px: Permissive, may pair far-away text
  * - Actual optimal value depends on image resolution and typical layout
  */
-const DISTANCE_THRESHOLD = 150;
+// Roster/yearbook images are typically high-resolution; names often appear
+// 200–500 px below a face at full image resolution.  150 was too conservative
+// and caused most pairings to be classified as orphans.
+const DISTANCE_THRESHOLD = 500;
 
 /**
  * Calculate euclidean distance between two 2D points

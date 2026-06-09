@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { DraftCard } from '../../types/card';
+import type { DraftCard, Trait } from '../../types/card';
 import CardReviewItem from './CardReviewItem';
 import FaceCropEditor from './FaceCropEditor';
 import './extraction-review.css';
@@ -36,7 +36,7 @@ export default function ExtractionReview({
   );
 
   // State: current edits to card traits
-  const [editedTraits, setEditedTraits] = useState<Map<string, string[]>>(
+  const [editedTraits, setEditedTraits] = useState<Map<string, Trait[]>>(
     new Map(draftCards.map((card) => [card.faceId, card.traits || []]))
   );
 
@@ -52,7 +52,7 @@ export default function ExtractionReview({
   }, []);
 
   // Callback: user edited a card's traits
-  const handleTraitsChange = useCallback((faceId: string, newTraits: string[]) => {
+  const handleTraitsChange = useCallback((faceId: string, newTraits: Trait[]) => {
     setEditedTraits((prev) => new Map(prev).set(faceId, newTraits));
   }, []);
 

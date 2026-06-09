@@ -1,7 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TraitEditor from './TraitEditor';
+import type { Trait } from '../../types/card';
+
+function makeTrait(overrides: Partial<Trait> = {}): Trait {
+  return {
+    id: `t-${Math.random()}`,
+    question: 'Do they wear glasses?',
+    answer: true,
+    ...overrides,
+  };
+}
 
 describe('TraitEditor', () => {
   const mockOnTraitsChange = vi.fn();
@@ -10,258 +20,310 @@ describe('TraitEditor', () => {
     mockOnTraitsChange.mockClear();
   });
 
-  describe('rendering', () => {
-    it('should render with an empty state when no traits are provided', () => {
-      render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+  // ── Rendering ────────────────────────────────────────────
 
-      expect(screen.getByLabelText(/add a trait/i)).toBeInTheDocument();
-      expect(screen.getByRole('region', { name: /current traits/i })).toBeInTheDocument();
-    });
-
-    it('should display existing traits as tags', () => {
-      const traits = ['funny', 'tall', 'mysterious'];
-      render(
-        <TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
-
-      traits.forEach((trait) => {
-        expect(screen.getByText(trait)).toBeInTheDocument();
-      });
-    });
-
-    it('should render remove button for each trait', () => {
-      const traits = ['funny', 'tall'];
-      render(
-        <TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
-
-      const removeButtons = screen.getAllByLabelText(/remove trait/i);
-      expect(removeButtons).toHaveLength(2);
-    });
-
-    it('should show empty state message when traits list is empty', () => {
-      render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
-
-      expect(screen.getByText(/no traits yet/i)).toBeInTheDocument();
-    });
+  it('renders the question input field', () => {
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+    expect(screen.getByLabelText(/add a yes\/no question/i)).toBeInTheDocument();
   });
 
-  describe('adding traits', () => {
-    it('should add a trait when user types and presses Enter', async () => {
-      const user = userEvent.setup();
-      render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
-
-      const input = screen.getByLabelText(/add a trait/i) as HTMLInputElement;
-      await user.type(input, 'funny');
-      await user.keyboard('{Enter}');
-
-      expect(mockOnTraitsChange).toHaveBeenCalledWith(['funny']);
-      expect(input.value).toBe(''); // Input should be cleared
-    });
-
-    it('should trim whitespace from trait input', async () => {
-      const user = userEvent.setup();
-      render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
-
-      const input = screen.getByLabelText(/add a trait/i);
-      await user.type(input, '  mysterious  ');
-      await user.keyboard('{Enter}');
-
-      expect(mockOnTraitsChange).toHaveBeenCalledWith(['mysterious']);
-    });
-
-    it('should not add empty traits', async () => {
-      const user = userEvent.setup();
-      render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
-
-      const input = screen.getByLabelText(/add a trait/i);
-      await user.type(input, '   '); // Only whitespace
-      await user.keyboard('{Enter}');
-
-      expect(mockOnTraitsChange).not.toHaveBeenCalled();
-    });
-
-    it('should not add duplicate traits', async () => {
-      const user = userEvent.setup();
-      const traits = ['funny'];
-      render(
-        <TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
-
-      const input = screen.getByLabelText(/add a trait/i);
-      await user.type(input, 'funny');
-      await user.keyboard('{Enter}');
-
-      expect(mockOnTraitsChange).not.toHaveBeenCalled();
-    });
-
-    it('should handle case-insensitive duplicate detection', async () => {
-      const user = userEvent.setup();
-      const traits = ['Funny'];
-      render(
-        <TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
-
-      const input = screen.getByLabelText(/add a trait/i);
-      await user.type(input, 'funny');
-      await user.keyboard('{Enter}');
-
-      expect(mockOnTraitsChange).not.toHaveBeenCalled();
-    });
-
-    it('should add trait with click on add button', async () => {
-      const user = userEvent.setup();
-      render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
-
-      const input = screen.getByLabelText(/add a trait/i);
-      const button = screen.getByRole('button', { name: /add trait/i });
-
-      await user.type(input, 'tall');
-      await user.click(button);
-
-      expect(mockOnTraitsChange).toHaveBeenCalledWith(['tall']);
-    });
+  it('renders the questions region', () => {
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+    expect(screen.getByRole('region', { name: /current questions/i })).toBeInTheDocument();
   });
 
-  describe('removing traits', () => {
-    it('should remove a trait when remove button is clicked', async () => {
-      const user = userEvent.setup();
-      const traits = ['funny', 'tall'];
-      render(
-        <TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
-
-      const removeButtons = screen.getAllByLabelText(/remove trait: funny/i);
-      await user.click(removeButtons[0]);
-
-      expect(mockOnTraitsChange).toHaveBeenCalledWith(['tall']);
-    });
-
-    it('should remove trait by index correctly', async () => {
-      const user = userEvent.setup();
-      const traits = ['funny', 'tall', 'mysterious'];
-      render(
-        <TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
-
-      // Remove the middle one
-      const removeButtons = screen.getAllByLabelText(/remove trait: tall/i);
-      await user.click(removeButtons[0]);
-
-      expect(mockOnTraitsChange).toHaveBeenCalledWith(['funny', 'mysterious']);
-    });
-
-    it('should support Backspace in input to remove last trait', async () => {
-      const user = userEvent.setup();
-      const traits = ['funny', 'tall'];
-      const { rerender } = render(
-        <TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
-
-      const input = screen.getByLabelText(/add a trait/i) as HTMLInputElement;
-      input.focus();
-
-      // Backspace in empty input should remove last trait
-      await user.keyboard('{Backspace}');
-
-      expect(mockOnTraitsChange).toHaveBeenCalledWith(['funny']);
-
-      // Update the component with new traits
-      rerender(
-        <TraitEditor traits={['funny']} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
-
-      // Clear the mock for the second backspace test
-      mockOnTraitsChange.mockClear();
-
-      // Focus the input again
-      input.focus();
-      await user.keyboard('{Backspace}');
-
-      expect(mockOnTraitsChange).toHaveBeenCalledWith([]);
-    });
+  it('shows empty state when no traits are provided', () => {
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+    expect(screen.getByText(/no questions yet/i)).toBeInTheDocument();
   });
 
-  describe('keyboard interaction', () => {
-    it('should support focus management with Tab key', async () => {
-      const user = userEvent.setup();
-      render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+  it('displays existing trait questions', () => {
+    const traits = [
+      makeTrait({ question: 'Do they wear glasses?' }),
+      makeTrait({ question: 'Are they left-handed?' }),
+    ];
+    render(<TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
 
-      const input = screen.getByLabelText(/add a trait/i);
-      const addButton = screen.getByRole('button', { name: /add trait/i });
-
-      input.focus();
-      expect(document.activeElement).toBe(input);
-
-      await user.keyboard('{Tab}');
-      expect(document.activeElement).toBe(addButton);
-    });
-
-    it('should clear input after successfully adding a trait', async () => {
-      const user = userEvent.setup();
-      render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
-
-      const input = screen.getByLabelText(/add a trait/i) as HTMLInputElement;
-      await user.type(input, 'funny');
-      await user.keyboard('{Enter}');
-
-      expect(input.value).toBe('');
-    });
+    expect(screen.getByText('Do they wear glasses?')).toBeInTheDocument();
+    expect(screen.getByText('Are they left-handed?')).toBeInTheDocument();
   });
 
-  describe('accessibility', () => {
-    it('should have proper label for input field', () => {
-      render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+  it('shows Yes for traits with answer=true', () => {
+    const traits = [makeTrait({ question: 'Do they wear glasses?', answer: true })];
+    render(<TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
 
-      const input = screen.getByLabelText(/add a trait/i);
-      expect(input).toHaveAttribute('id');
+    const toggle = screen.getByRole('button', {
+      name: /Answer for "Do they wear glasses\?": Yes/i,
     });
-
-    it('should have descriptive aria-label on remove buttons', () => {
-      const traits = ['funny'];
-      render(
-        <TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
-
-      const removeButton = screen.getByLabelText(/remove trait: funny/i);
-      expect(removeButton).toBeInTheDocument();
-    });
-
-    it('should have a region for displaying traits', () => {
-      render(<TraitEditor traits={['funny']} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
-
-      expect(screen.getByRole('region', { name: /current traits/i })).toBeInTheDocument();
-    });
-
-    it('should have proper semantic structure', () => {
-      const traits = ['funny', 'tall'];
-      render(
-        <TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
-
-      // Should use list structure for traits
-      const traitsList = screen.getByRole('list', { name: /traits list/i });
-      expect(traitsList).toBeInTheDocument();
-
-      const items = within(traitsList).getAllByRole('listitem');
-      expect(items).toHaveLength(2);
-    });
+    expect(toggle).toHaveTextContent('Yes');
   });
 
-  describe('props updates', () => {
-    it('should update when traits prop changes', () => {
-      const { rerender } = render(
-        <TraitEditor traits={['funny']} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
+  it('shows No for traits with answer=false', () => {
+    const traits = [makeTrait({ question: 'Do they wear glasses?', answer: false })];
+    render(<TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
 
-      expect(screen.getByText('funny')).toBeInTheDocument();
-
-      rerender(
-        <TraitEditor traits={['funny', 'tall']} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
-      );
-
-      expect(screen.getByText('funny')).toBeInTheDocument();
-      expect(screen.getByText('tall')).toBeInTheDocument();
+    const toggle = screen.getByRole('button', {
+      name: /Answer for "Do they wear glasses\?": No/i,
     });
+    expect(toggle).toHaveTextContent('No');
+  });
+
+  it('renders a remove button for each trait', () => {
+    const traits = [
+      makeTrait({ question: 'Wears glasses?' }),
+      makeTrait({ question: 'Left-handed?' }),
+    ];
+    render(<TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const removeButtons = screen.getAllByRole('button', { name: /remove question/i });
+    expect(removeButtons).toHaveLength(2);
+  });
+
+  it('uses list structure for questions', () => {
+    const traits = [makeTrait(), makeTrait({ question: 'Are they tall?' })];
+    render(<TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const list = screen.getByRole('list', { name: /questions list/i });
+    const items = within(list).getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+  });
+
+  // ── Adding questions ─────────────────────────────────────
+
+  it('adds a question with answer=Yes (default) when Enter is pressed', async () => {
+    const user = userEvent.setup();
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const input = screen.getByLabelText(/add a yes\/no question/i);
+    await user.type(input, 'Do they wear glasses?');
+    await user.keyboard('{Enter}');
+
+    expect(mockOnTraitsChange).toHaveBeenCalledOnce();
+    const [newTraits] = mockOnTraitsChange.mock.calls[0];
+    expect(newTraits).toHaveLength(1);
+    expect(newTraits[0].question).toBe('Do they wear glasses?');
+    expect(newTraits[0].answer).toBe(true);
+    expect(typeof newTraits[0].id).toBe('string');
+  });
+
+  it('adds a question with answer=No when No preset is selected', async () => {
+    const user = userEvent.setup();
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const noButton = screen.getByRole('button', { name: 'No' });
+    await user.click(noButton);
+
+    const input = screen.getByLabelText(/add a yes\/no question/i);
+    await user.type(input, 'Are they short?');
+    await user.keyboard('{Enter}');
+
+    const [newTraits] = mockOnTraitsChange.mock.calls[0];
+    expect(newTraits[0].answer).toBe(false);
+  });
+
+  it('adds a question via the Add button', async () => {
+    const user = userEvent.setup();
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const input = screen.getByLabelText(/add a yes\/no question/i);
+    await user.type(input, 'Do they play guitar?');
+    await user.click(screen.getByRole('button', { name: /add question/i }));
+
+    expect(mockOnTraitsChange).toHaveBeenCalledOnce();
+    const [newTraits] = mockOnTraitsChange.mock.calls[0];
+    expect(newTraits[0].question).toBe('Do they play guitar?');
+  });
+
+  it('trims whitespace from the question text', async () => {
+    const user = userEvent.setup();
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const input = screen.getByLabelText(/add a yes\/no question/i);
+    await user.type(input, '  Wears a hat?  ');
+    await user.keyboard('{Enter}');
+
+    const [newTraits] = mockOnTraitsChange.mock.calls[0];
+    expect(newTraits[0].question).toBe('Wears a hat?');
+  });
+
+  it('does not add a question when the input is empty', async () => {
+    const user = userEvent.setup();
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    await user.keyboard('{Enter}');
+    expect(mockOnTraitsChange).not.toHaveBeenCalled();
+  });
+
+  it('does not add a question when the input is only whitespace', async () => {
+    const user = userEvent.setup();
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const input = screen.getByLabelText(/add a yes\/no question/i);
+    await user.type(input, '   ');
+    await user.keyboard('{Enter}');
+
+    expect(mockOnTraitsChange).not.toHaveBeenCalled();
+  });
+
+  it('rejects duplicate questions (case-insensitive)', async () => {
+    const user = userEvent.setup();
+    const existing = [makeTrait({ question: 'Wears glasses?' })];
+    render(
+      <TraitEditor traits={existing} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
+    );
+
+    const input = screen.getByLabelText(/add a yes\/no question/i);
+    await user.type(input, 'wears glasses?');
+    await user.keyboard('{Enter}');
+
+    expect(mockOnTraitsChange).not.toHaveBeenCalled();
+  });
+
+  it('clears the input after a successful add', async () => {
+    const user = userEvent.setup();
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const input = screen.getByLabelText(/add a yes\/no question/i) as HTMLInputElement;
+    await user.type(input, 'Wears glasses?');
+    await user.keyboard('{Enter}');
+
+    expect(input.value).toBe('');
+  });
+
+  it('resets the pending answer to Yes after a successful add', async () => {
+    const user = userEvent.setup();
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    // Select No
+    await user.click(screen.getByRole('button', { name: 'No' }));
+    // Add a question
+    const input = screen.getByLabelText(/add a yes\/no question/i);
+    await user.type(input, 'Short?');
+    await user.keyboard('{Enter}');
+
+    // The Yes preset should now be active again
+    const yesButton = screen.getByRole('button', { name: 'Yes' });
+    expect(yesButton).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  // ── Toggling answers ──────────────────────────────────────
+
+  it('toggles an answer from Yes to No when the pill is clicked', async () => {
+    const user = userEvent.setup();
+    const traits = [makeTrait({ id: 'id-1', question: 'Wears glasses?', answer: true })];
+    render(<TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const toggle = screen.getByRole('button', {
+      name: /Answer for "Wears glasses\?": Yes/i,
+    });
+    await user.click(toggle);
+
+    const [newTraits] = mockOnTraitsChange.mock.calls[0];
+    expect(newTraits[0].answer).toBe(false);
+  });
+
+  it('toggles an answer from No to Yes when the pill is clicked', async () => {
+    const user = userEvent.setup();
+    const traits = [makeTrait({ id: 'id-1', question: 'Wears glasses?', answer: false })];
+    render(<TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const toggle = screen.getByRole('button', {
+      name: /Answer for "Wears glasses\?": No/i,
+    });
+    await user.click(toggle);
+
+    const [newTraits] = mockOnTraitsChange.mock.calls[0];
+    expect(newTraits[0].answer).toBe(true);
+  });
+
+  it('only flips the toggled trait, leaving others unchanged', async () => {
+    const user = userEvent.setup();
+    const traits = [
+      makeTrait({ id: 'id-1', question: 'Wears glasses?', answer: true }),
+      makeTrait({ id: 'id-2', question: 'Is tall?', answer: false }),
+    ];
+    render(<TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const toggle = screen.getByRole('button', {
+      name: /Answer for "Wears glasses\?": Yes/i,
+    });
+    await user.click(toggle);
+
+    const [newTraits] = mockOnTraitsChange.mock.calls[0];
+    expect(newTraits.find((t: Trait) => t.id === 'id-1')?.answer).toBe(false);
+    expect(newTraits.find((t: Trait) => t.id === 'id-2')?.answer).toBe(false); // unchanged
+  });
+
+  // ── Removing questions ────────────────────────────────────
+
+  it('removes a question when the × button is clicked', async () => {
+    const user = userEvent.setup();
+    const traits = [
+      makeTrait({ id: 'id-1', question: 'Wears glasses?' }),
+      makeTrait({ id: 'id-2', question: 'Is tall?' }),
+    ];
+    render(<TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const removeBtn = screen.getByRole('button', { name: /remove question: Wears glasses/i });
+    await user.click(removeBtn);
+
+    const [newTraits] = mockOnTraitsChange.mock.calls[0];
+    expect(newTraits).toHaveLength(1);
+    expect(newTraits[0].id).toBe('id-2');
+  });
+
+  // ── Accessibility ─────────────────────────────────────────
+
+  it('has a label linked to the input', () => {
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+    const input = screen.getByLabelText(/add a yes\/no question/i);
+    expect(input).toHaveAttribute('id');
+  });
+
+  it('has descriptive aria-labels on the answer-toggle buttons', () => {
+    const traits = [makeTrait({ question: 'Wears glasses?', answer: true })];
+    render(<TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const toggle = screen.getByRole('button', {
+      name: /Answer for "Wears glasses\?": Yes/i,
+    });
+    expect(toggle).toBeInTheDocument();
+  });
+
+  it('has descriptive aria-labels on the remove buttons', () => {
+    const traits = [makeTrait({ question: 'Wears glasses?' })];
+    render(<TraitEditor traits={traits} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    expect(screen.getByRole('button', { name: /remove question: Wears glasses/i })).toBeInTheDocument();
+  });
+
+  it('marks the active preset button with aria-pressed=true', () => {
+    render(<TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />);
+
+    const yesBtn = screen.getByRole('button', { name: 'Yes' });
+    const noBtn = screen.getByRole('button', { name: 'No' });
+
+    expect(yesBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(noBtn).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  // ── Props updates ─────────────────────────────────────────
+
+  it('reflects updated traits when the prop changes', () => {
+    const { rerender } = render(
+      <TraitEditor traits={[]} onTraitsChange={mockOnTraitsChange} cardId="card-1" />
+    );
+
+    expect(screen.getByText(/no questions yet/i)).toBeInTheDocument();
+
+    rerender(
+      <TraitEditor
+        traits={[makeTrait({ question: 'Wears glasses?' })]}
+        onTraitsChange={mockOnTraitsChange}
+        cardId="card-1"
+      />
+    );
+
+    expect(screen.getByText('Wears glasses?')).toBeInTheDocument();
   });
 });

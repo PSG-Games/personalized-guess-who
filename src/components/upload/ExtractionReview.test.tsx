@@ -344,9 +344,9 @@ describe('ExtractionReview', () => {
 
       render(<ExtractionReview draftCards={cards} onCardsApproved={onApproved} />);
 
-      // Add a trait
-      const traitInput = screen.getByPlaceholderText(/e\.g\., 'always late'/i);
-      await user.type(traitInput, 'funny');
+      // Add a yes/no question
+      const traitInput = screen.getByPlaceholderText(/do they wear glasses/i);
+      await user.type(traitInput, 'Do they wear glasses?');
       await user.keyboard('{Enter}');
 
       // Approve
@@ -356,7 +356,9 @@ describe('ExtractionReview', () => {
       expect(onApproved).toHaveBeenCalledOnce();
       const approvedCards = onApproved.mock.calls[0][0];
 
-      expect(approvedCards[0].traits).toEqual(['funny']);
+      expect(approvedCards[0].traits).toHaveLength(1);
+      expect(approvedCards[0].traits[0].question).toBe('Do they wear glasses?');
+      expect(approvedCards[0].traits[0].answer).toBe(true);
     });
   });
 });

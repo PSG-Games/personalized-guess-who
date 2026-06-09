@@ -2,7 +2,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SavedCardsGallery from './SavedCardsGallery';
 import { cardStorage } from '../../lib/cardStorage';
-import type { Character } from '../../types/card';
+import type { Character, Trait } from '../../types/card';
+
+function makeTrait(question: string, answer = true): Trait {
+  return { id: `t-${question}`, question, answer };
+}
 
 describe('SavedCardsGallery', () => {
   const mockCard: Character = {
@@ -14,7 +18,7 @@ describe('SavedCardsGallery', () => {
       boundingBox: { x: 10, y: 10, width: 50, height: 60 },
     },
     name: 'Alice',
-    traits: ['funny', 'smart'],
+    traits: [makeTrait('Is this person funny?'), makeTrait('Are they smart?')],
     imageUrl: 'data:image/png;base64,abc123',
   };
 
@@ -27,7 +31,7 @@ describe('SavedCardsGallery', () => {
       boundingBox: { x: 100, y: 10, width: 50, height: 60 },
     },
     name: 'Bob',
-    traits: ['lazy'],
+    traits: [makeTrait('Are they always late?', false)],
     imageUrl: 'data:image/png;base64,def456',
   };
 
@@ -59,9 +63,9 @@ describe('SavedCardsGallery', () => {
       expect(screen.getByText('Alice')).toBeInTheDocument();
     });
 
-    // Verify traits are displayed
-    expect(screen.getByText('funny')).toBeInTheDocument();
-    expect(screen.getByText('smart')).toBeInTheDocument();
+    // Verify question text is displayed
+    expect(screen.getByText('Is this person funny?')).toBeInTheDocument();
+    expect(screen.getByText('Are they smart?')).toBeInTheDocument();
   });
 
   it('displays multiple saved cards', async () => {
@@ -98,13 +102,13 @@ describe('SavedCardsGallery', () => {
     render(<SavedCardsGallery />);
 
     await waitFor(() => {
-      expect(screen.getByText('funny')).toBeInTheDocument();
-      expect(screen.getByText('smart')).toBeInTheDocument();
+      expect(screen.getByText('Is this person funny?')).toBeInTheDocument();
+      expect(screen.getByText('Are they smart?')).toBeInTheDocument();
     });
 
-    // Verify they have the trait tag class
-    const traitElements = screen.getAllByText('funny');
-    expect(traitElements.some((el) => el.className.includes('trait-tag'))).toBe(true);
+    // Verify they are inside a trait tag list item
+    const questionEl = screen.getByText('Is this person funny?');
+    expect(questionEl.closest('.saved-card-trait-tag')).not.toBeNull();
   });
 
   it('handles cards without traits', async () => {
@@ -117,8 +121,8 @@ describe('SavedCardsGallery', () => {
       expect(screen.getByText('Alice')).toBeInTheDocument();
     });
 
-    // Should not display traits section
-    expect(screen.queryByText(/Traits:/)).not.toBeInTheDocument();
+    // Should not display questions section
+    expect(screen.queryByText(/Questions:/)).not.toBeInTheDocument();
   });
 
   it('deletes a card when delete button is clicked', async () => {
@@ -275,7 +279,13 @@ describe('SavedCardsGallery', () => {
   it('handles long trait lists', async () => {
     const cardWithManyTraits = {
       ...mockCard,
-      traits: ['trait1', 'trait2', 'trait3', 'trait4', 'trait5'],
+      traits: [
+        makeTrait('Question one?'),
+        makeTrait('Question two?'),
+        makeTrait('Question three?'),
+        makeTrait('Question four?'),
+        makeTrait('Question five?'),
+      ],
     };
 
     await cardStorage.add(cardWithManyTraits);
@@ -283,8 +293,8 @@ describe('SavedCardsGallery', () => {
     render(<SavedCardsGallery />);
 
     await waitFor(() => {
-      expect(screen.getByText('trait1')).toBeInTheDocument();
-      expect(screen.getByText('trait5')).toBeInTheDocument();
+      expect(screen.getByText('Question one?')).toBeInTheDocument();
+      expect(screen.getByText('Question five?')).toBeInTheDocument();
     });
   });
 });

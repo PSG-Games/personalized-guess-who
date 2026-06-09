@@ -33,6 +33,23 @@ export interface Face {
 }
 
 /**
+ * A yes/no question tied to a specific card.
+ *
+ * During gameplay a questioner asks "Does your person [question]?" and the
+ * holder of the card answers Yes or No. All other players eliminate cards that
+ * don't match that answer.
+ *
+ * Questions can be physical ("Do they wear glasses?") or inside-joke
+ * ("Are they always late to practice?") — anything with a true/false answer
+ * for this particular person.
+ */
+export interface Trait {
+  id: string;
+  question: string; // e.g., "Do they wear glasses?"
+  answer: boolean; // true = Yes, false = No
+}
+
+/**
  * Draft card created by pairing a face with text (name)
  * Ready for user review and correction in the next step
  */
@@ -43,11 +60,11 @@ export interface DraftCard {
   matchedTextIndex: number | null; // index of the text block that was paired
   confidence: number; // 0-1 scale: how confident is this pairing?
   pairingReason: 'proximity' | 'orphan'; // 'proximity' if paired via distance, 'orphan' if no nearby text
-  traits?: string[]; // custom inside-joke traits added by the user during review
+  traits?: Trait[]; // yes/no questions added during the review step
 }
 
 /**
- * Final card after user edits and trait entry (Task 7)
+ * Final card after user edits and trait entry
  * Represents a complete game card with all information
  */
 export interface Character {
@@ -55,6 +72,6 @@ export interface Character {
   faceId: string;
   face: Face;
   name: string;
-  traits?: string[]; // custom inside-joke traits
+  traits?: Trait[]; // yes/no questions
   imageUrl: string; // reference to the original image
 }

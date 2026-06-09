@@ -41,12 +41,12 @@ async function initializeDetector(): Promise<FaceDetector | null> {
   initPromise = (async () => {
     try {
       const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm'
       );
       detector = await FaceDetector.createFromOptions(vision, {
         baseOptions: {
           modelAssetPath:
-            'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/face_short_range.tflite',
+            'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/latest/blaze_face_short_range.tflite',
         },
         runningMode: 'IMAGE',
       });
@@ -91,7 +91,7 @@ export async function detectFaces(imageDataUrl: string): Promise<Face[]> {
     });
 
     const loadedImage = await imageLoadPromise;
-    const detections = det.detectForVideo(loadedImage, Date.now());
+    const detections = det.detect(loadedImage);
 
     const faces: Face[] = detections.detections.map((detection, index) => {
       const bbox = detection.boundingBox;

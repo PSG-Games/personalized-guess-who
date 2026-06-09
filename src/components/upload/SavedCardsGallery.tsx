@@ -140,11 +140,16 @@ export default function SavedCardsGallery({ onCardDeleted, onAllCleared }: Saved
 
               {card.traits && card.traits.length > 0 && (
                 <div className="saved-card-traits">
-                  <p className="saved-card-traits-label">Traits:</p>
+                  <p className="saved-card-traits-label">Questions:</p>
                   <ul className="saved-card-traits-list">
-                    {card.traits.map((trait, index) => (
-                      <li key={`${card.id}-${index}`} className="saved-card-trait-tag">
-                        {trait}
+                    {card.traits.map((trait) => (
+                      <li key={trait.id} className="saved-card-trait-tag">
+                        <span className="saved-card-trait-question">{trait.question}</span>
+                        <span
+                          className={`saved-card-trait-answer${trait.answer ? ' answer-yes' : ' answer-no'}`}
+                        >
+                          {trait.answer ? 'Yes' : 'No'}
+                        </span>
                       </li>
                     ))}
                   </ul>

@@ -1,4 +1,4 @@
-/* Trait Editor - Component styles for custom trait input and display */
+/* TraitEditor — yes/no question cards */
 
 .trait-editor {
   display: flex;
@@ -10,12 +10,10 @@
   border: 1px solid var(--accent-border);
 }
 
-/* Display section for current traits */
+/* ── Saved questions list ─────────────────────────────────── */
+
 .trait-editor-display {
   min-height: 2.5rem;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
 }
 
 .trait-editor-empty-state {
@@ -32,31 +30,66 @@
   margin: 0;
   padding: 0;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.5rem;
-  align-items: center;
 }
 
 .trait-editor-item {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
 }
 
-.trait-editor-tag {
-  display: inline-block;
-  padding: 0.375rem 0.75rem;
-  background-color: var(--accent-bg);
-  color: var(--accent);
-  border: 1px solid var(--accent-border);
-  border-radius: 0.25rem;
+.trait-editor-question {
+  flex: 1;
+  min-width: 0;
   font-size: 0.875rem;
-  font-weight: 500;
+  color: var(--text-h);
   word-break: break-word;
-  max-width: 15rem;
 }
 
+/* Yes / No pill that can be clicked to flip */
+.trait-editor-answer-toggle {
+  flex-shrink: 0;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 150ms ease-out, transform 100ms ease-out;
+  white-space: nowrap;
+}
+
+.trait-editor-answer-toggle.answer-yes {
+  background-color: #d1fae5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+
+.trait-editor-answer-toggle.answer-no {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.trait-editor-answer-toggle:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.trait-editor-answer-toggle:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Remove button */
 .trait-editor-remove-button {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -67,17 +100,16 @@
   background-color: transparent;
   color: var(--text);
   cursor: pointer;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   line-height: 1;
   border-radius: 0.25rem;
   transition: all 150ms ease-out;
-  font-weight: 600;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .trait-editor-remove-button:hover {
-  background-color: var(--accent-bg);
-  color: var(--accent);
+  background-color: #fee2e2;
+  color: #991b1b;
   opacity: 1;
 }
 
@@ -87,15 +119,8 @@
   opacity: 1;
 }
 
-.trait-editor-remove-button:active {
-  opacity: 0.9;
-}
+/* ── Input row ────────────────────────────────────────────── */
 
-.trait-editor-remove-icon {
-  display: block;
-}
-
-/* Input section */
 .trait-editor-input-group {
   display: flex;
   flex-direction: column;
@@ -113,11 +138,13 @@
 .trait-editor-input-wrapper {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .trait-editor-input {
   flex: 1;
-  min-width: 0;
+  min-width: 10rem;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
@@ -125,7 +152,7 @@
   font-family: inherit;
   background-color: var(--bg);
   color: var(--text-h);
-  transition: all 150ms ease-out;
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
 }
 
 .trait-editor-input::placeholder {
@@ -143,7 +170,50 @@
   border-color: var(--accent-border);
 }
 
+/* Yes / No preset buttons beside the input */
+.trait-editor-answer-preset-group {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.trait-editor-answer-preset {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background-color: var(--bg);
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+  white-space: nowrap;
+}
+
+.trait-editor-answer-preset:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+
+.trait-editor-answer-preset.active {
+  background-color: var(--accent);
+  color: var(--bg);
+}
+
+.trait-editor-answer-preset:not(.active):hover {
+  background-color: var(--accent-bg);
+}
+
+.trait-editor-answer-preset:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  z-index: 1;
+  position: relative;
+}
+
+/* Add button */
 .trait-editor-add-button {
+  flex-shrink: 0;
   padding: 0.5rem 1rem;
   background-color: var(--accent);
   color: var(--bg);
@@ -152,7 +222,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 150ms ease-out;
+  transition: opacity 150ms ease-out;
   white-space: nowrap;
 }
 
@@ -162,7 +232,7 @@
 
 .trait-editor-add-button:focus {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 .trait-editor-add-button:active {
@@ -178,7 +248,8 @@
   line-height: 1.4;
 }
 
-/* Responsive adjustments */
+/* ── Responsive ───────────────────────────────────────────── */
+
 @media (max-width: 640px) {
   .trait-editor {
     padding: 0.75rem;
@@ -189,28 +260,35 @@
     gap: 0.375rem;
   }
 
-  .trait-editor-tag {
-    max-width: 10rem;
-    font-size: 0.8125rem;
+  .trait-editor-input {
+    min-width: 0;
   }
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: more) {
-  .trait-editor-tag {
-    border: 2px solid var(--accent);
-  }
+/* ── Accessibility: reduced motion ───────────────────────── */
 
-  .trait-editor-remove-button:hover {
-    border: 1px solid var(--accent);
-  }
-}
-
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+  .trait-editor-answer-toggle,
   .trait-editor-remove-button,
   .trait-editor-input,
-  .trait-editor-add-button {
+  .trait-editor-add-button,
+  .trait-editor-answer-preset {
     transition: none;
+  }
+
+  .trait-editor-answer-toggle:hover {
+    transform: none;
+  }
+}
+
+/* ── High contrast ────────────────────────────────────────── */
+
+@media (prefers-contrast: more) {
+  .trait-editor-answer-toggle.answer-yes {
+    border: 2px solid #065f46;
+  }
+
+  .trait-editor-answer-toggle.answer-no {
+    border: 2px solid #991b1b;
   }
 }

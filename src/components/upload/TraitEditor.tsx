@@ -1,104 +1,104 @@
 import { useState, useCallback } from 'react';
+import type { Trait } from '../../types/card';
 import './traits.css';
 
 export interface TraitEditorProps {
-  traits: string[];
-  onTraitsChange: (traits: string[]) => void;
+  traits: Trait[];
+  onTraitsChange: (traits: Trait[]) => void;
   cardId: string;
 }
 
+function generateId(): string {
+  return `trait-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
 /**
- * TraitEditor - Component for managing custom traits/inside-jokes on a card
+ * TraitEditor — add yes/no questions to a card for use during gameplay.
  *
- * Displays:
- * - List of current traits as tags/pills
- * - Input field to add new traits
- * - Remove button for each trait
+ * Each trait is a question ("Do they wear glasses?") paired with a yes/no
+ * answer for this specific card.  During the game, a questioner asks the
+ * question and the card-holder answers Yes or No; other players eliminate
+ * cards that don't match.
  *
- * Behavior:
- * - Enter key adds a trait
- * - Backspace in empty input removes last trait
- * - Prevents duplicates (case-insensitive)
- * - Trims whitespace from input
- * - Calls onTraitsChange callback whenever traits are modified
- *
- * Accessibility:
- * - Proper labels for input
- * - ARIA labels for remove buttons
- * - Semantic list structure for traits
- * - Keyboard navigation support
+ * Interactions:
+ * - Type a question, select Yes or No (default Yes), click Add or press Enter
+ * - Click the Yes/No pill on any saved question to flip its answer
+ * - Click × to remove a question
+ * - Duplicate questions (case-insensitive) are silently rejected
  */
-export default function TraitEditor({
-  traits,
-  onTraitsChange,
-  cardId,
-}: TraitEditorProps) {
-  const [inputValue, setInputValue] = useState('');
+export default function TraitEditor({ traits, onTraitsChange, cardId }: TraitEditorProps) {
+  const [question, setQuestion] = useState('');
+  const [pendingAnswer, setPendingAnswer] = useState<boolean>(true); // default: Yes
 
-  // Add a new trait
-  const handleAddTrait = useCallback(() => {
-    const trimmedValue = inputValue.trim();
+  const handleAdd = useCallback(() => {
+    const trimmed = question.trim();
+    if (!trimmed) return;
 
-    // Validation: empty strings
-    if (!trimmedValue) {
-      return;
-    }
+    // Reject case-insensitive duplicates
+    if (traits.some((t) => t.question.toLowerCase() === trimmed.toLowerCase())) return;
 
-    // Validation: duplicates (case-insensitive)
-    if (traits.some((t) => t.toLowerCase() === trimmedValue.toLowerCase())) {
-      return;
-    }
+    onTraitsChange([
+      ...traits,
+      { id: generateId(), question: trimmed, answer: pendingAnswer },
+    ]);
+    setQuestion('');
+    setPendingAnswer(true); // reset to Yes after each add
+  }, [question, pendingAnswer, traits, onTraitsChange]);
 
-    // Add the trait and clear input
-    onTraitsChange([...traits, trimmedValue]);
-    setInputValue('');
-  }, [inputValue, traits, onTraitsChange]);
-
-  // Remove a trait by index
-  const handleRemoveTrait = useCallback(
-    (index: number) => {
-      const newTraits = traits.filter((_, i) => i !== index);
-      onTraitsChange(newTraits);
+  const handleToggleAnswer = useCallback(
+    (id: string) => {
+      onTraitsChange(traits.map((t) => (t.id === id ? { ...t, answer: !t.answer } : t)));
     },
     [traits, onTraitsChange]
   );
 
-  // Handle keyboard input
+  const handleRemove = useCallback(
+    (id: string) => {
+      onTraitsChange(traits.filter((t) => t.id !== id));
+    },
+    [traits, onTraitsChange]
+  );
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        handleAddTrait();
-      } else if (e.key === 'Backspace' && inputValue === '' && traits.length > 0) {
-        e.preventDefault();
-        // Remove the last trait
-        handleRemoveTrait(traits.length - 1);
+        handleAdd();
       }
     },
-    [inputValue, traits, handleAddTrait, handleRemoveTrait]
+    [handleAdd]
   );
 
   const inputId = `trait-input-${cardId}`;
 
   return (
     <div className="trait-editor">
-      {/* Current traits list */}
-      <div className="trait-editor-display" role="region" aria-label="Current traits">
+      {/* Saved questions */}
+      <div className="trait-editor-display" role="region" aria-label="Current questions">
         {traits.length === 0 ? (
-          <p className="trait-editor-empty-state">No traits yet — add custom ones below!</p>
+          <p className="trait-editor-empty-state">No questions yet — add yes/no questions below.</p>
         ) : (
-          <ul className="trait-editor-list" aria-label="Traits list">
-            {traits.map((trait, index) => (
-              <li key={`${trait}-${index}`} className="trait-editor-item">
-                <span className="trait-editor-tag">{trait}</span>
+          <ul className="trait-editor-list" aria-label="Questions list">
+            {traits.map((trait) => (
+              <li key={trait.id} className="trait-editor-item">
+                <span className="trait-editor-question">{trait.question}</span>
+                <button
+                  type="button"
+                  className={`trait-editor-answer-toggle${trait.answer ? ' answer-yes' : ' answer-no'}`}
+                  onClick={() => handleToggleAnswer(trait.id)}
+                  aria-label={`Answer for "${trait.question}": ${trait.answer ? 'Yes' : 'No'} — click to flip`}
+                  title="Click to flip Yes / No"
+                >
+                  {trait.answer ? 'Yes' : 'No'}
+                </button>
                 <button
                   type="button"
                   className="trait-editor-remove-button"
-                  onClick={() => handleRemoveTrait(index)}
-                  aria-label={`Remove trait: ${trait}`}
-                  title={`Remove the '${trait}' trait`}
+                  onClick={() => handleRemove(trait.id)}
+                  aria-label={`Remove question: ${trait.question}`}
+                  title="Remove this question"
                 >
-                  <span className="trait-editor-remove-icon">×</span>
+                  <span aria-hidden="true">×</span>
                 </button>
               </li>
             ))}
@@ -106,34 +106,56 @@ export default function TraitEditor({
         )}
       </div>
 
-      {/* Input area to add traits */}
+      {/* Add-question input row */}
       <div className="trait-editor-input-group">
         <label htmlFor={inputId} className="trait-editor-label">
-          Add a trait
+          Add a yes/no question
         </label>
         <div className="trait-editor-input-wrapper">
           <input
             id={inputId}
             type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.currentTarget.value)}
+            value={question}
+            onChange={(e) => setQuestion(e.currentTarget.value)}
             onKeyDown={handleKeyDown}
-            placeholder="e.g., 'always late', 'tells jokes'"
+            placeholder='e.g., "Do they wear glasses?"'
             className="trait-editor-input"
             aria-describedby={`${inputId}-hint`}
           />
+          {/* Answer preset — what the answer is for this card */}
+          <div
+            className="trait-editor-answer-preset-group"
+            role="group"
+            aria-label="Answer for this card"
+          >
+            <button
+              type="button"
+              className={`trait-editor-answer-preset${pendingAnswer ? ' active' : ''}`}
+              onClick={() => setPendingAnswer(true)}
+              aria-pressed={pendingAnswer}
+            >
+              Yes
+            </button>
+            <button
+              type="button"
+              className={`trait-editor-answer-preset${!pendingAnswer ? ' active' : ''}`}
+              onClick={() => setPendingAnswer(false)}
+              aria-pressed={!pendingAnswer}
+            >
+              No
+            </button>
+          </div>
           <button
             type="button"
             className="trait-editor-add-button"
-            onClick={handleAddTrait}
-            aria-label="Add trait"
-            title="Add this trait to the card"
+            onClick={handleAdd}
+            aria-label="Add question"
           >
             Add
           </button>
         </div>
         <small id={`${inputId}-hint`} className="trait-editor-hint">
-          Press Enter or click Add. Use Backspace in empty field to remove the last trait.
+          Press Enter or click Add. Toggle Yes / No to set the answer for this card.
         </small>
       </div>
     </div>

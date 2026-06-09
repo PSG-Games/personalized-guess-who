@@ -1,12 +1,12 @@
-import type { DraftCard } from '../../types/card';
+import type { DraftCard, Trait } from '../../types/card';
 import TraitEditor from './TraitEditor';
 
 export interface CardReviewItemProps {
   card: DraftCard;
   editedName: string;
-  editedTraits: string[];
+  editedTraits: Trait[];
   onNameChange: (newName: string) => void;
-  onTraitsChange: (traits: string[]) => void;
+  onTraitsChange: (traits: Trait[]) => void;
   onDiscard: () => void;
   onRecropStart: () => void;
 }
