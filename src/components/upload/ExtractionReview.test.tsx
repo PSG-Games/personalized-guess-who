@@ -335,7 +335,7 @@ describe('ExtractionReview', () => {
       expect(approvedCards[1].matchedName).toBe('Charlie');
     });
 
-    it('includes traits in approved cards', async () => {
+    it('approves cards without traits (traits are set during gameplay, not setup)', async () => {
       const user = userEvent.setup();
       const onApproved = vi.fn();
       const cards = [
@@ -344,21 +344,12 @@ describe('ExtractionReview', () => {
 
       render(<ExtractionReview draftCards={cards} onCardsApproved={onApproved} />);
 
-      // Add a yes/no question
-      const traitInput = screen.getByPlaceholderText(/do they wear glasses/i);
-      await user.type(traitInput, 'Do they wear glasses?');
-      await user.keyboard('{Enter}');
-
-      // Approve
       const approveButton = screen.getByRole('button', { name: /approve all|confirm|save all/i });
       await user.click(approveButton);
 
       expect(onApproved).toHaveBeenCalledOnce();
       const approvedCards = onApproved.mock.calls[0][0];
-
-      expect(approvedCards[0].traits).toHaveLength(1);
-      expect(approvedCards[0].traits[0].question).toBe('Do they wear glasses?');
-      expect(approvedCards[0].traits[0].answer).toBe(true);
+      expect(approvedCards[0].matchedName).toBe('Alice');
     });
   });
 });

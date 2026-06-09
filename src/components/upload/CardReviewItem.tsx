@@ -1,12 +1,9 @@
-import type { DraftCard, Trait } from '../../types/card';
-import TraitEditor from './TraitEditor';
+import type { DraftCard } from '../../types/card';
 
 export interface CardReviewItemProps {
   card: DraftCard;
   editedName: string;
-  editedTraits: Trait[];
   onNameChange: (newName: string) => void;
-  onTraitsChange: (traits: Trait[]) => void;
   onDiscard: () => void;
   onRecropStart: () => void;
 }
@@ -26,9 +23,7 @@ export interface CardReviewItemProps {
 export default function CardReviewItem({
   card,
   editedName,
-  editedTraits,
   onNameChange,
-  onTraitsChange,
   onDiscard,
   onRecropStart,
 }: CardReviewItemProps) {
@@ -85,15 +80,6 @@ export default function CardReviewItem({
             {card.pairingReason === 'orphan' && (
               <small className="card-review-item-orphan-note">No text found nearby</small>
             )}
-          </div>
-
-          {/* Trait editor */}
-          <div className="card-review-item-traits-section">
-            <TraitEditor
-              traits={editedTraits}
-              onTraitsChange={onTraitsChange}
-              cardId={card.faceId}
-            />
           </div>
 
           {/* Confidence indicator */}

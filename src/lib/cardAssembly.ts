@@ -165,6 +165,27 @@ function calculatePairingConfidence(face: Face, text: TextBlock, distance: numbe
  * @returns Draft cards ready for user review and correction
  */
 export function assembleDraftCards(textBlocks: TextBlock[], faces: Face[]): DraftCard[] {
+  // Diagnostic: log raw coordinates so mismatches are visible in the browser console
+  if (faces.length > 0 || textBlocks.length > 0) {
+    console.debug('[cardAssembly] faces:', faces.map(f => ({
+      id: f.id,
+      confidence: f.confidence,
+      center: {
+        x: Math.round(f.boundingBox.x + f.boundingBox.width / 2),
+        y: Math.round(f.boundingBox.y + f.boundingBox.height / 2),
+      },
+      bbox: f.boundingBox,
+    })));
+    console.debug('[cardAssembly] textBlocks:', textBlocks.map(t => ({
+      text: t.text.trim().slice(0, 40),
+      confidence: t.confidence,
+      center: {
+        x: Math.round(t.boundingBox.x + t.boundingBox.width / 2),
+        y: Math.round(t.boundingBox.y + t.boundingBox.height / 2),
+      },
+    })));
+    console.debug('[cardAssembly] DISTANCE_THRESHOLD:', DISTANCE_THRESHOLD);
+  }
   // Phase 1: Build a mapping of text -> closest face
   interface TextFaceMatch {
     textIndex: number;

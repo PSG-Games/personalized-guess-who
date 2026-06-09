@@ -115,7 +115,7 @@ export default function OCRResults({ imageDataUrl, filename, onReviewComplete }:
             />
           )}
 
-          <details className="detailed-results">
+          <details className="detailed-results" open>
             <summary>Detailed Results</summary>
 
             {textBlocks.length > 0 && (
